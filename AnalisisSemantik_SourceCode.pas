@@ -1,0 +1,4 @@
+program AnalisisSemantik;
+begin
+
+end.

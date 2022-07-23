@@ -1,0 +1,12 @@
+[Project]
+FileName=D:\_DATA-PERKULIAHAN\semester6\TEKKOM\Tugas\tubes\TeknikKompilasi-AnalisisSemantik\AnalisisSemantik.dp
+Name=AnalisisSemantik
+MainUnit=D:\_DATA-PERKULIAHAN\semester6\TEKKOM\Tugas\tubes\TeknikKompilasi-AnalisisSemantik\AnalisisSemantik_SourceCode.pas
+UnitCount=1
+ResFiles=D:\_DATA-PERKULIAHAN\semester6\TEKKOM\Tugas\tubes\TeknikKompilasi-AnalisisSemantik\rsrc.rc
+NoConsole=0
+IsDll=0
+Icon=C:\Dev-Pas\bin\Mainicon.ico
+[Unit1]
+FileName=D:\_DATA-PERKULIAHAN\semester6\TEKKOM\Tugas\tubes\TeknikKompilasi-AnalisisSemantik\AnalisisSemantik_SourceCode.pas
+FileTime=1425516130
