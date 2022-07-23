@@ -1,5 +1,7 @@
 @echo off
-c:\dev-pas\bin\ldw.exe  D:\_DATA-~1\SEMEST~4\TEKKOM\Tugas\tubes\TEKNIK~1\rsrc.o -s   -o d:\_data-~1\semest~4\tekkom\tugas\tubes\teknik~1\analis~1.exe link.res exp.$$$
+SET THEFILE=d:\_data-~1\semest~4\tekkom\tugas\tubes\teknik~1\analis~1.exe
+echo Linking %THEFILE%
+c:\dev-pas\bin\ldw.exe  D:\_DATA-~1\SEMEST~4\TEKKOM\Tugas\tubes\TEKNIK~1\rsrc.o -s   -b base.$$$ -o d:\_data-~1\semest~4\tekkom\tugas\tubes\teknik~1\analis~1.exe link.res
 if errorlevel 1 goto linkend
 goto end
 :asmend
