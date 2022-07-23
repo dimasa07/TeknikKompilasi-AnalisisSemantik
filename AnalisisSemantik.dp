@@ -6,7 +6,7 @@ UnitCount=1
 ResFiles=D:\_DATA-PERKULIAHAN\semester6\TEKKOM\Tugas\tubes\TeknikKompilasi-AnalisisSemantik\rsrc.rc
 NoConsole=0
 IsDll=0
-Icon=C:\Dev-Pas\bin\Mainicon.ico
+Icon=C:\Dev-Pas\Icon\Mainicon.ico
 [Unit1]
 FileName=D:\_DATA-PERKULIAHAN\semester6\TEKKOM\Tugas\tubes\TeknikKompilasi-AnalisisSemantik\AnalisisSemantik_SourceCode.pas
-FileTime=1425516130
+FileTime=1425520200
