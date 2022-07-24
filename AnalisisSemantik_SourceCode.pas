@@ -405,30 +405,12 @@ begin
              prevChar := c;
         end;
         isi_tipe(tokens);
-        print_table(tokens);
+        //print_table(tokens);
 end;
 
 // Fungsi Flow of Control Checking
 function flow_of_control_check:string;
-const
-     math_simbols = ['/','+','*','-'];
-var
-   temp : Tpointer;
 begin
-     temp := tokens;
-     if temp <> nil then
-     begin
-          repeat
-                if temp^.token[1] in math_simbols then
-                begin
-                     writeln(temp^.prev^.token,' ',temp^.next^.token);
-                     if (lowercase(temp^.prev^.var_tipe) = 'string')or
-                     (lowercase(temp^.next^.var_tipe) = 'string') then
-                      flow_of_control_check := keterangan_true;
-                end;
-                temp := temp^.next;
-          until temp = nil;
-     end;
 
      flow_of_control_check := keterangan_false;
 end;
@@ -449,9 +431,27 @@ end;
 
 // Fungsi Type Checking
 function type_check:string;
+const
+     math_simbols = ['/','*','-'];
+var
+   temp : Tpointer;
+   hasil : string;
 begin
-
-     type_check := keterangan_false;
+     temp := tokens;
+     if temp <> nil then
+     begin
+          repeat
+                if temp^.token[1] in math_simbols then
+                begin
+                     if (lowercase(temp^.prev^.var_tipe) = 'string')or
+                     (lowercase(temp^.next^.var_tipe) = 'string') then
+                      hasil := keterangan_true;
+                end;
+                temp := temp^.next;
+          until temp = nil;
+     end;
+     if hasil = keterangan_true then type_check := keterangan_true
+     else type_check := keterangan_false;
 end;
 
 // Fungsi Type Conversion Checking
@@ -501,7 +501,7 @@ begin
 
         // Close file
         close(file_input);
-        {
+
         // Print tabel //
         write('Tabel Output Analisis Semantik');
         y := wherey;
@@ -545,7 +545,7 @@ begin
                if (i=1+y)or(i=3+y)or(i=10+y) then write(#196);
           end;
         end;
-        // Akhir print Tabel // }
+        // Akhir print Tabel //
 
 
         // Error handling
