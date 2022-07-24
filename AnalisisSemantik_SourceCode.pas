@@ -22,9 +22,11 @@ const
 type
     Tpointer = ^Ttoken;
     Ttoken = record
-                  token : String;
-                  tipe : String;
-                  next : Tpointer;
+                   prev : Tpointer;
+                   token : String;
+                   tipe : String;
+                   var_tipe : string;
+                   next : Tpointer;
             end;
 
 var
@@ -95,6 +97,24 @@ begin
      end;
 end;
 
+// Fungsi getByToken
+function getByToken(token : string):Tpointer;
+var
+   temp : Tpointer;
+begin
+     temp := tokens;
+     if temp <> nil then
+     repeat
+           if temp^.token = token then
+           begin
+              getByToken :=temp;
+              break;
+           end;
+           temp := temp^.next;
+     until temp = nil;
+     //getByToken := nil;
+end;
+
 // Fungsi Cari Tipe Token
 function cari_tipe(const token : string):string;
 var
@@ -134,18 +154,18 @@ var
 begin
      exist := false;
      temp := tokens;
-     {
+
      if temp <> nil then
      begin
           repeat
-                if token = temp^.token then
+                if (token = temp^.token)and(token[1] in blanks) then
                 begin
                      exist := true;
                      break;
                 end;
                 temp := temp^.next;
           until temp = nil;
-     end;}
+     end;
 
      if not exist then
      begin
@@ -153,17 +173,21 @@ begin
      new(baru);
 
      // Mengisi data node
+     baru^.prev := nil;
      baru^.token := token;
      baru^.next := nil;
 
      // Menambah node ke list token
      if tokens = nil then
         begin
-             tokens := baru;
+
              tokensTail := baru;
+             tokens := tokensTail;
         end
      else
          begin
+              baru^.prev := tokensTail;
+              baru^.next := nil;
               tokensTail^.next := baru;
               tokensTail := baru;
          end;
@@ -198,16 +222,29 @@ begin
                end;
                if tipe = '' then
                   tipe := 'KONSTANTA';
-               if (temp^.token[1] in simbols) and (temp^.next^.token[1] in simbols) then
+               if (temp^.token[1] in simbols) and (temp^.prev^.token[1] in simbols) then
                begin
-                    temp^.token := temp^.token + temp^.next^.token;
-                    if(temp^.next^.next <> nil) then
-                    temp^.next := temp^.next^.next
-                    else
-                    temp^.next := nil;
+                    {writeln(temp^.token[1] );
+                    writeln(temp^.prev^.token[1]);
+                    temp^.prev^.token := temp^.prev^.token + temp^.token;
+                    temp^.prev^.next := temp^.next;}
                end;
 
                temp^.tipe := tipe;
+               if tipe ='VAR' then
+               begin
+                   temp^.var_tipe := temp^.next^.next^.token;
+                   if temp^.var_tipe[1] in blanks then
+                      temp^.var_tipe := temp^.next^.next^.next^.token;
+               end;
+               if tipe ='KONSTANTA' then
+               begin
+                    if getByToken(temp^.token) <> nil then
+                    begin
+                         temp^.var_tipe := getByToken(temp^.token)^.var_tipe;
+                    end;
+               end;
+
                temp := temp^.next;
           until temp = nil;
      end;
@@ -215,7 +252,10 @@ end;
 
 // Fungsi Scan Character
 function scan_char(c : char):boolean;
+var
+   temp : string;
 begin
+     temp := '';
      if (upcase(c) in blanks)  then
      begin
           tambah_token(tokens, c);
@@ -262,12 +302,12 @@ begin
                 end
                 else if temp^.tipe = 'VAR' then
                 begin
-                     gotoxy(16, 4+y+nVar);write(temp^.token);
+                     gotoxy(16, 4+y+nVar);write(temp^.token, '(',temp^.var_tipe,')');
                      nVar := nVar + 1;
                 end
                 else if temp^.tipe = 'KONSTANTA' then
                 begin
-                     gotoxy(37, 4+y+nKons);write(temp^.token);
+                     gotoxy(37, 4+y+nKons);write(temp^.prev^.token,'-',temp^.token, '(',temp^.var_tipe,')','-',temp^.next^.token);
                      nKons := nKons + 1;
                 end
                 else if temp^.tipe = 'OPERATOR' then
@@ -342,18 +382,14 @@ begin
      while not eof(file_input) do
         begin
              read(file_input, c);
+
              if(c = #9) then
              write('    ')
              else
              write(c);
 
              // Proses Analisis Leksikal
-             if (prevChar in simbols) and (c in simbols) then
-             begin
-                  tambah_token(tokens, c);
-                  prevChar := '0';
-             end
-             else if scan_char(c) then
+             if scan_char(c) then
                 begin
                      if (temp <> '') and (temp <> #13) then
                      begin
@@ -374,7 +410,25 @@ end;
 
 // Fungsi Flow of Control Checking
 function flow_of_control_check:string;
+const
+     math_simbols = ['/','+','*','-'];
+var
+   temp : Tpointer;
 begin
+     temp := tokens;
+     if temp <> nil then
+     begin
+          repeat
+                if temp^.token[1] in math_simbols then
+                begin
+                     writeln(temp^.prev^.token,' ',temp^.next^.token);
+                     if (lowercase(temp^.prev^.var_tipe) = 'string')or
+                     (lowercase(temp^.next^.var_tipe) = 'string') then
+                      flow_of_control_check := keterangan_true;
+                end;
+                temp := temp^.next;
+          until temp = nil;
+     end;
 
      flow_of_control_check := keterangan_false;
 end;
@@ -430,16 +484,17 @@ begin
         // Scan file
         reset(file_input);
         scan_source_code(file_input);
-        {
+
         // Print isi file
         reset(file_input);
-        while not eof(file_input) do
+        {while not eof(file_input) do
         begin
              read(file_input, c);
              if(c = #9) then write('    ')
              else write(c);
-        end;
-        }
+        end;}
+
+
         writeln;
         writeln;
         writeln;
@@ -490,8 +545,8 @@ begin
                if (i=1+y)or(i=3+y)or(i=10+y) then write(#196);
           end;
         end;
-        // Akhir print Tabel //
-        }
+        // Akhir print Tabel // }
+
 
         // Error handling
         except
