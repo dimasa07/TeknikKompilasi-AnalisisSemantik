@@ -6,8 +6,8 @@ uses
 const
      keterangan_true = 'Terdeteksi';
      keterangan_false = 'Tidak Terdeteksi';
-     simbols = [':','+','<','>','=','-','*','/'];
-     blanks = [' ',#9,#10,';','.',',','(',')','[',']',#39,#34];
+     simbols = [':','+','<','>','=','-','*','/',';'];
+     blanks = [' ',#9,#10,'.',',','(',')','[',']',#39,#34];
      jumlah_konstant = 7;
      jumlah_keyword = 22;
      konstants : array[1..jumlah_konstant] of string = (
@@ -234,7 +234,7 @@ begin
                if tipe ='VAR' then
                begin
                    temp^.var_tipe := temp^.next^.next^.token;
-                   if temp^.var_tipe[1] in blanks then
+                   if (temp^.var_tipe[1] in blanks)or(temp^.var_tipe[1] in simbols) then
                       temp^.var_tipe := temp^.next^.next^.next^.token;
                end;
                if tipe ='KONSTANTA' then
@@ -258,12 +258,10 @@ begin
      temp := '';
      if (upcase(c) in blanks)  then
      begin
-          tambah_token(tokens, c);
           scan_char := true;
      end
      else if upcase(c) in simbols then
      begin
-          tambah_token(tokens, c);
           scan_char := true
      end
      else
@@ -307,7 +305,7 @@ begin
                 end
                 else if temp^.tipe = 'KONSTANTA' then
                 begin
-                     gotoxy(37, 4+y+nKons);write(temp^.prev^.token,'-',temp^.token, '(',temp^.var_tipe,')','-',temp^.next^.token);
+                     gotoxy(37, 4+y+nKons);write(temp^.token);
                      nKons := nKons + 1;
                 end
                 else if temp^.tipe = 'OPERATOR' then
@@ -393,8 +391,10 @@ begin
                 begin
                      if (temp <> '') and (temp <> #13) then
                      begin
+
                           tambah_token(tokens, temp);
                      end;
+                     tambah_token(tokens, c);
                      temp := ''
                 end
              else
