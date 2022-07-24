@@ -65,38 +65,6 @@ begin
      pilih_menu := menu;
 end;
 
-// Prosedur Scan Variables
-procedure scan_variables(var file_input : file of char);
-const
-     blank = [' ',#9, #10, #13];
-     keys : array[1..2] of string = ('asd','asa');
-var
-   key : string;
-   c : char;
-   nama_variable, tipe_data, tmp : string;
-begin
-     key := '';
-     tmp := '';
-     while not eof(file_input) do
-     begin
-          read(file_input, c);
-          if (key = 'var') then
-          begin
-               if not(c in blank) then
-               begin
-
-               end;
-          end
-          else
-          begin
-               if (c = 'v')and(key='') then key := 'v'
-               else if (c = 'a')and(key='v') then key := 'va'
-               else if (c = 'r')and(key='va') then key := 'var'
-               else key := '';
-          end;
-     end;
-end;
-
 // Fungsi getByToken
 function getByToken(token : string):Tpointer;
 var
@@ -405,7 +373,7 @@ begin
              prevChar := c;
         end;
         isi_tipe(tokens);
-        //print_table(tokens);
+        print_table(tokens);
 end;
 
 // Fungsi Flow of Control Checking
@@ -417,9 +385,33 @@ end;
 
 // Fungsi Uniqueness Checking
 function uniqueness_check:string;
+var
+   temp, temp1 : Tpointer;
+   hasil : integer;
 begin
-
-     uniqueness_check := keterangan_false;
+     hasil := 0;
+     temp := tokens;
+     while temp <> nil do
+     begin
+          if temp^.tipe = 'VAR' then
+          begin
+               temp1 := tokens;
+               if hasil > 1 then break;
+               hasil := 0;
+               while temp1 <> nil do
+               begin
+                    if (temp^.token = temp1^.token)and(temp1^.tipe='VAR') then
+                    begin
+                         hasil := hasil+1;
+                         if hasil = 2 then break;
+                    end;
+                    temp1 := temp1^.next;
+               end;
+          end;
+          temp := temp^.next;
+     end;
+     if hasil > 1 then uniqueness_check := keterangan_true
+     else uniqueness_check := keterangan_false;
 end;
 
 // Fungsi Name Related Checking
