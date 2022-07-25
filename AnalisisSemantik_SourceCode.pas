@@ -9,14 +9,15 @@ const
      simbols = [':','+','<','>','=','-','*','/',';'];
      blanks = [' ',#9,#10,'.',',','(',')','[',']',#39,#34];
      jumlah_konstant = 7;
-     jumlah_keyword = 22;
+     jumlah_keyword = 26;
      konstants : array[1..jumlah_konstant] of string = (
                'STRING','INTEGER','BOOLEAN','CHAR','BYTE','REAL','FILE'
                );
      keywords : array[1..jumlah_keyword] of string = (
               'PROGRAM','VAR','BEGIN','END','IF','NOT','ELSE','THEN',
               'FOR','TO','DO','PROCEDURE','FUNCTION','ARRAY','TYPE',
-              'CONST','USES','OR','AND','NIL','TRY','EXCEPT');
+              'CONST','USES','OR','AND','NIL','TRY','EXCEPT','BREAK',
+              'WHILE','REPEAT','UNTIL');
 
 
 type
@@ -27,7 +28,7 @@ type
                    tipe : String;
                    var_tipe : string;
                    next : Tpointer;
-            end;
+             end;
 
 var
    file_input : file of char;
@@ -374,9 +375,52 @@ end;
 
 // Fungsi Flow of Control Checking
 function flow_of_control_check:string;
-begin
+const
+     jumlah_key = 3;
+     keys : array[1..jumlah_key] of string = ('REPEAT','FOR','WHILE');
+var
+   hasil : string;
+   temp : Tpointer;
+   is_loop : boolean;
+   i, jumlah_begin : integer;
 
-     flow_of_control_check := keterangan_false;
+begin
+     hasil := keterangan_false;
+     temp := tokens;
+     is_loop := false;
+     jumlah_begin := 0;
+     while temp <> nil do
+     begin
+          if temp^.tipe = 'KEYWORD' then
+          begin
+               for i := 1 to jumlah_key do
+                   if upcase(temp^.token) = keys[i] then
+                      is_loop := true;
+
+               if is_loop then
+               begin
+                    if upcase(temp^.token) = 'BEGIN' then
+                       jumlah_begin := jumlah_begin+1;
+                    if upcase(temp^.token) = 'END' then
+                    begin
+                         jumlah_begin := jumlah_begin-1;
+                         if jumlah_begin = 0 then is_loop := false;
+                    end;
+               end;
+
+               if upcase(temp^.token)='BREAK' then
+                  if is_loop then
+                     hasil := keterangan_false
+                  else
+                  begin
+                       hasil := keterangan_true;
+                       break;
+                  end;
+
+          end;
+          temp := temp^.next;
+     end;
+     flow_of_control_check := hasil;
 end;
 
 // Fungsi Uniqueness Checking
@@ -432,7 +476,7 @@ begin
           if temp^.token[1] in math_simbols then
           begin
                if (lowercase(temp^.prev^.var_tipe) = 'string')or
-                  (lowercase(temp^.next^.var_tipe) = 'string') then
+               (lowercase(temp^.next^.var_tipe) = 'string') then
                   hasil := keterangan_true;
           end;
           temp := temp^.next;
