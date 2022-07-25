@@ -68,19 +68,41 @@ end;
 // Fungsi getByToken
 function getByToken(token : string):Tpointer;
 var
-   temp : Tpointer;
+   temp, hasil : Tpointer;
 begin
      temp := tokens;
-     if temp <> nil then
-     repeat
-           if temp^.token = token then
-           begin
-              getByToken :=temp;
-              break;
-           end;
-           temp := temp^.next;
-     until temp = nil;
-     //getByToken := nil;
+     hasil := nil;
+     while temp <> nil do
+     begin
+          if temp^.token = token then
+          begin
+               hasil :=temp;
+               break;
+          end;
+          temp := temp^.next;
+     end;
+
+     getByToken := hasil;
+end;
+
+// Fungsi getextTipe
+function getNextTipe(link : Tpointer):Tpointer;
+var
+   temp, hasil : Tpointer;
+begin
+     hasil := link;
+     temp := link;
+     while temp <> nil do
+     begin
+          if temp^.tipe = 'KONSTANTA' then
+          begin
+               hasil := temp;
+               break;
+          end;
+          temp := temp^.next;
+     end;
+
+     getNextTipe := hasil;
 end;
 
 // Fungsi Cari Tipe Token
@@ -91,25 +113,24 @@ var
 begin
      tipe := '';
      for i:= 1 to jumlah_keyword do
-     begin
-          if upcase(token) = keywords[i] then
-          begin
-               tipe := 'KEYWORD';
-               break;
-          end;
-     end;
+         if upcase(token) = keywords[i] then
+         begin
+              tipe := 'KEYWORD';
+              break;
+         end;
+
      for i:= 1 to jumlah_konstant do
-     begin
-          if upcase(token) = konstants[i] then
-          begin
-               tipe := 'KONSTANTA';
-               break;
-          end;
-     end;
+         if upcase(token) = konstants[i] then
+         begin
+              tipe := 'KONSTANTA';
+              break;
+         end;
+
      if token[1] in simbols then
         tipe := 'OPERATOR';
      if token[1] in blanks then
         tipe := 'DELIMITER';
+
      cari_tipe := tipe;
 end;
 
@@ -123,16 +144,14 @@ begin
      exist := false;
      temp := tokens;
 
-     if temp <> nil then
+     while temp <> nil do
      begin
-          repeat
-                if (token = temp^.token)and(token[1] in blanks) then
-                begin
-                     exist := true;
-                     break;
-                end;
-                temp := temp^.next;
-          until temp = nil;
+          if (token = temp^.token)and(token[1] in blanks) then
+          begin
+               exist := true;
+               break;
+          end;
+          temp := temp^.next;
      end;
 
      if not exist then
@@ -147,20 +166,18 @@ begin
 
      // Menambah node ke list token
      if tokens = nil then
-        begin
-
-             tokensTail := baru;
-             tokens := tokensTail;
-        end
+     begin
+          tokensTail := baru;
+          tokens := tokensTail;
+     end
      else
-         begin
-              baru^.prev := tokensTail;
-              baru^.next := nil;
-              tokensTail^.next := baru;
-              tokensTail := baru;
-         end;
+     begin
+          baru^.prev := tokensTail;
+          baru^.next := nil;
+          tokensTail^.next := baru;
+          tokensTail := baru;
      end;
-
+     end;
 end;
 
 // Prosedur Isi Tipe Token
@@ -168,70 +185,62 @@ procedure isi_tipe(var tokens :Tpointer);
 var
    temp : Tpointer;
    key : string;
-   tipe, lastKeyword : string;
+   tipe : string;
 begin
      key := '';
-     lastKeyword := '';
      tipe := '';
      temp := tokens;
-     if temp <> nil then
+     while temp <> nil do
      begin
-          repeat
-               tipe := cari_tipe(temp^.token);
-               if tipe = 'KEYWORD' then
-               begin
-                    if (upcase(temp^.token)='VAR') or (upcase(temp^.token)='PROGRAM') then
-                    key := 'VAR'
-                    else key := '';
-               end;
-               if (key = 'VAR') and(tipe = '') then
-               begin
-                    tipe := 'VAR';
-               end;
-               if tipe = '' then
-                  tipe := 'KONSTANTA';
-               if (temp^.token[1] in simbols) and (temp^.prev^.token[1] in simbols) then
-               begin
-                    {writeln(temp^.token[1] );
-                    writeln(temp^.prev^.token[1]);
-                    temp^.prev^.token := temp^.prev^.token + temp^.token;
-                    temp^.prev^.next := temp^.next;}
-               end;
+          tipe := cari_tipe(temp^.token);
+          if tipe = 'KEYWORD' then
+          begin
+               if (upcase(temp^.token)='VAR') or (upcase(temp^.token)='PROGRAM') then
+                  key := 'VAR'
+               else key := '';
+          end;
+          if (key = 'VAR') and(tipe = '') then
+          begin
+               tipe := 'VAR';
+          end;
+          if tipe = '' then
+             tipe := 'KONSTANTA';
+          temp^.tipe := tipe;
 
-               temp^.tipe := tipe;
-               if tipe ='VAR' then
-               begin
-                   temp^.var_tipe := temp^.next^.next^.token;
-                   if (temp^.var_tipe[1] in blanks)or(temp^.var_tipe[1] in simbols) then
-                      temp^.var_tipe := temp^.next^.next^.next^.token;
-               end;
-               if tipe ='KONSTANTA' then
-               begin
-                    if getByToken(temp^.token) <> nil then
-                    begin
-                         temp^.var_tipe := getByToken(temp^.token)^.var_tipe;
-                    end;
-               end;
+          temp := temp^.next;
+     end;
+end;
 
-               temp := temp^.next;
-          until temp = nil;
+// Fungsi isi_tipe_var
+procedure isi_tipe_var(var tokens : Tpointer);
+var
+   temp : Tpointer;
+begin
+     temp := tokens;
+     while temp <> nil do
+     begin
+          if temp^.tipe ='VAR' then
+             temp^.var_tipe := getNextTipe(temp)^.token;
+          temp := temp^.next;
+     end;
+
+     temp := tokens;
+     while temp <> nil do
+     begin
+          if temp^.tipe ='KONSTANTA' then
+             if getByToken(temp^.token) <> nil then
+                temp^.var_tipe := getByToken(temp^.token)^.var_tipe;
+          temp := temp^.next;
      end;
 end;
 
 // Fungsi Scan Character
 function scan_char(c : char):boolean;
-var
-   temp : string;
 begin
-     temp := '';
      if (upcase(c) in blanks)  then
-     begin
-          scan_char := true;
-     end
+        scan_char := true
      else if upcase(c) in simbols then
-     begin
           scan_char := true
-     end
      else
          scan_char := false;
 end;
@@ -258,47 +267,45 @@ begin
      nOp := 0;
      nDel := 0;
      temp := tokens;
-     if temp <> nil then
-     begin
-          repeat
-                if temp^.tipe = 'KEYWORD' then
-                begin
-                     gotoxy(2, 4+y+nKw);write(temp^.token);
-                     nKw := nKw + 1;
-                end
-                else if temp^.tipe = 'VAR' then
-                begin
-                     gotoxy(16, 4+y+nVar);write(temp^.token, '(',temp^.var_tipe,')');
-                     nVar := nVar + 1;
-                end
-                else if temp^.tipe = 'KONSTANTA' then
-                begin
-                     gotoxy(37, 4+y+nKons);write(temp^.token);
-                     nKons := nKons + 1;
-                end
-                else if temp^.tipe = 'OPERATOR' then
-                begin
-                     gotoxy(58, 4+y+nOp);write(temp^.token);
-                     nOp := nOp + 1;
-                end
-                else if temp^.tipe = 'DELIMITER' then
-                begin
-                     gotoxy(69, 4+y+nDel);
-                     if temp^.token[1] = ' ' then
-                     write('SPASI')
-                     else if temp^.token[1] = #9 then
-                     write('TAB')
-                     else if temp^.token[1] = #13 then
-                     write('ENTER')
-                     else if temp^.token[1] = #10 then
-                     write('ENTER')
-                     else
-                     write(temp^.token);
-                     nDel := nDel + 1;
-                end;
-                temp := temp^.next;
-          until temp = nil;
 
+     while temp <> nil do
+     begin
+          if temp^.tipe = 'KEYWORD' then
+          begin
+               gotoxy(2, 4+y+nKw);write(temp^.token);
+               nKw := nKw + 1;
+          end
+          else if temp^.tipe = 'VAR' then
+          begin
+               gotoxy(16, 4+y+nVar);write(temp^.token, '(',temp^.var_tipe,')');
+               nVar := nVar + 1;
+          end
+          else if temp^.tipe = 'KONSTANTA' then
+          begin
+               gotoxy(37, 4+y+nKons);write(temp^.token);
+               nKons := nKons + 1;
+          end
+          else if temp^.tipe = 'OPERATOR' then
+          begin
+               gotoxy(58, 4+y+nOp);write(temp^.token);
+               nOp := nOp + 1;
+          end
+          else if temp^.tipe = 'DELIMITER' then
+          begin
+               gotoxy(69, 4+y+nDel);
+               if temp^.token[1] = ' ' then
+                  write('SPASI')
+               else if temp^.token[1] = #9 then
+                    write('TAB')
+               else if temp^.token[1] = #13 then
+                    write('ENTER')
+               else if temp^.token[1] = #10 then
+                    write('ENTER')
+               else
+                   write(temp^.token);
+               nDel := nDel + 1;
+          end;
+          temp := temp^.next;
      end;
 
      // Print tabel
@@ -313,67 +320,56 @@ begin
      if nOp > nMax then nMax := nOp;
      if nDel > nMax then nMax := nDel;
      for i:=(1+y) to (nMax+4+y) do
-     for j:=1 to 80 do
-     begin
-          if (j=1)or(j=15)or(j=36)or(j=57)or(j=68)or(j=80)then
-          begin
-               gotoxy(j,i);
-               if (i=1+y)and(j=1)then write(#218)
-               else if(i=1+y)and(j=80)then write(#191)
-               else if(i=3+y)and(j=1)then write(#195)
-               else if(i=nMax+4+y)and(j=1)then write(#192)
-               else if (i=1+y) then write(#194)
-               else if(i=3+y)and(j=80)then write(#180)
-               else if (i=3+y) then write(#197)
-               else if(i=nMax+4+y)and(j<>80)then write(#193)
-               else if(i=nMax+4+y)and(j=80)then write(#217)
-               else write(#179);
-          end
-          else
-          begin
-               gotoxy(j,i);
-               if (i=1+y)or(i=3+y)or(i=nMax+4+y) then write(#196);
-          end;
-     end;
+         for j:=1 to 80 do
+             if (j=1)or(j=15)or(j=36)or(j=57)or(j=68)or(j=80)then
+             begin
+                  gotoxy(j,i);
+                  if (i=1+y)and(j=1)then write(#218)
+                  else if(i=1+y)and(j=80)then write(#191)
+                  else if(i=3+y)and(j=1)then write(#195)
+                  else if(i=nMax+4+y)and(j=1)then write(#192)
+                  else if (i=1+y) then write(#194)
+                  else if(i=3+y)and(j=80)then write(#180)
+                  else if (i=3+y) then write(#197)
+                  else if(i=nMax+4+y)and(j<>80)then write(#193)
+                  else if(i=nMax+4+y)and(j=80)then write(#217)
+                  else write(#179);
+             end
+             else
+             begin
+                  gotoxy(j,i);
+                  if (i=1+y)or(i=3+y)or(i=nMax+4+y) then write(#196);
+             end;
 end;
 
 // Prosedur Scan Source Code
 procedure scan_source_code(var file_input : file of char);
 var
-   c, prevChar : char;
+   c : char;
    temp : string;
 begin
      temp := '';
-     prevChar := '0';
      while not eof(file_input) do
-        begin
-             read(file_input, c);
+     begin
+          read(file_input, c);
+          if(c = #9) then write('    ')
+          else write(c);
 
-             if(c = #9) then
-             write('    ')
-             else
-             write(c);
-
-             // Proses Analisis Leksikal
-             if scan_char(c) then
-                begin
-                     if (temp <> '') and (temp <> #13) then
-                     begin
-
-                          tambah_token(tokens, temp);
-                     end;
-                     tambah_token(tokens, c);
-                     temp := ''
-                end
-             else
-                 begin
-                      if c <> #13 then
-                      temp := temp + c;
-                 end;
-             prevChar := c;
-        end;
-        isi_tipe(tokens);
-        print_table(tokens);
+          // Proses Analisis Leksikal
+          if scan_char(c) then
+          begin
+               if (temp <> '') and (temp <> #13) then
+                  tambah_token(tokens, temp);
+               tambah_token(tokens, c);
+               temp := ''
+          end
+          else
+              if c <> #13 then
+                 temp := temp + c;
+      end;
+      isi_tipe(tokens);
+      isi_tipe_var(tokens);
+      print_table(tokens);
 end;
 
 // Fungsi Flow of Control Checking
@@ -397,7 +393,7 @@ begin
           begin
                temp1 := tokens;
                if hasil > 1 then break;
-               hasil := 0;
+                  hasil := 0;
                while temp1 <> nil do
                begin
                     if (temp^.token = temp1^.token)and(temp1^.tipe='VAR') then
@@ -430,20 +426,18 @@ var
    hasil : string;
 begin
      temp := tokens;
-     if temp <> nil then
+     hasil := keterangan_false;
+     while temp <> nil do
      begin
-          repeat
-                if temp^.token[1] in math_simbols then
-                begin
-                     if (lowercase(temp^.prev^.var_tipe) = 'string')or
-                     (lowercase(temp^.next^.var_tipe) = 'string') then
-                      hasil := keterangan_true;
-                end;
-                temp := temp^.next;
-          until temp = nil;
+          if temp^.token[1] in math_simbols then
+          begin
+               if (lowercase(temp^.prev^.var_tipe) = 'string')or
+                  (lowercase(temp^.next^.var_tipe) = 'string') then
+                  hasil := keterangan_true;
+          end;
+          temp := temp^.next;
      end;
-     if hasil = keterangan_true then type_check := keterangan_true
-     else type_check := keterangan_false;
+     type_check := hasil;
 end;
 
 // Fungsi Type Conversion Checking
@@ -460,12 +454,9 @@ begin
      type_coercion := keterangan_false;
 end;
 
-
-
 // Prosedur Baca File
 procedure baca_file(nama_file:string);
 var
-   c : char;
    y,i,j : integer;
 begin
      clrscr;
@@ -485,7 +476,6 @@ begin
              if(c = #9) then write('    ')
              else write(c);
         end;}
-
 
         writeln;
         writeln;
@@ -515,28 +505,27 @@ begin
         gotoxy(42,9+y);write(type_coercion);
 
         for i:=(1+y) to (10+y) do
-        for j:=1 to 80 do
-        begin
-          if (j=1)or(j=40)or(j=80)then
-          begin
-               gotoxy(j,i);
-               if (i=1+y)and(j=1)then write(#218)
-               else if(i=1+y)and(j=80)then write(#191)
-               else if(i=3+y)and(j=1)then write(#195)
-               else if(i=10+y)and(j=1)then write(#192)
-               else if (i=1+y) then write(#194)
-               else if(i=3+y)and(j=80)then write(#180)
-               else if (i=3+y) then write(#197)
-               else if(i=10+y)and(j<>80)then write(#193)
-               else if(i=10+y)and(j=80)then write(#217)
-               else write(#179);
-          end
-          else
-          begin
-               gotoxy(j,i);
-               if (i=1+y)or(i=3+y)or(i=10+y) then write(#196);
-          end;
-        end;
+            for j:=1 to 80 do
+                if (j=1)or(j=40)or(j=80)then
+                begin
+                     gotoxy(j,i);
+                     if (i=1+y)and(j=1)then write(#218)
+                     else if(i=1+y)and(j=80)then write(#191)
+                     else if(i=3+y)and(j=1)then write(#195)
+                     else if(i=10+y)and(j=1)then write(#192)
+                     else if (i=1+y) then write(#194)
+                     else if(i=3+y)and(j=80)then write(#180)
+                     else if (i=3+y) then write(#197)
+                     else if(i=10+y)and(j<>80)then write(#193)
+                     else if(i=10+y)and(j=80)then write(#217)
+                     else write(#179);
+                end
+                else
+                begin
+                     gotoxy(j,i);
+                     if (i=1+y)or(i=3+y)or(i=10+y) then write(#196);
+                end;
+
         // Akhir print Tabel //
 
 
@@ -547,12 +536,12 @@ begin
                    writeln('File ',nama_file,' tidak terbaca.');
                    writeln('Pastikan file tersebut disimpan satu folder dengan aplikasi ini.');
               end;
-     end;
+     end; // End Try block //
+
      writeln;
      write('Tekan ENTER untuk kembali ke menu ');
      readln;
 end;
-
 
 
 begin
