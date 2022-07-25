@@ -40,6 +40,7 @@ var
    menu : string;
 begin
      clrscr;
+     textcolor(yellow);
      // Banner
      writeln('        Aplikasi Analisis Semantik          ' );
      writeln('       Tugas Besar Teknik Kompilasi         ' );
@@ -53,6 +54,7 @@ begin
      writeln('=============================================');
      writeln;
 
+     textcolor(white);
      // Menu
      writeln('1. Analisis Semantik input_1.pas');
      writeln('2. Analisis Semantik input_2.pas');
@@ -245,7 +247,7 @@ begin
          scan_char := false;
 end;
 
-procedure print_table(tokens: Tpointer);
+procedure print_table_token(tokens: Tpointer);
 var
    i,j,y : integer;
    nKw,nVar,nKons,nOp,nDel,nMax: integer;
@@ -352,8 +354,10 @@ begin
      while not eof(file_input) do
      begin
           read(file_input, c);
+          textcolor(yellow);
           if(c = #9) then write('    ')
           else write(c);
+          textcolor(white);
 
           // Proses Analisis Leksikal
           if scan_char(c) then
@@ -369,7 +373,7 @@ begin
       end;
       isi_tipe(tokens);
       isi_tipe_var(tokens);
-      print_table(tokens);
+      //print_table_token(tokens);
 end;
 
 // Fungsi Flow of Control Checking
@@ -643,16 +647,6 @@ begin
         // Scan file
         reset(file_input);
         scan_source_code(file_input);
-
-        // Print isi file
-        reset(file_input);
-        {while not eof(file_input) do
-        begin
-             read(file_input, c);
-             if(c = #9) then write('    ')
-             else write(c);
-        end;}
-
         writeln;
         writeln;
         writeln;
@@ -701,9 +695,7 @@ begin
                      gotoxy(j,i);
                      if (i=1+y)or(i=3+y)or(i=10+y) then write(#196);
                 end;
-
         // Akhir print Tabel //
-
 
         // Error handling
         except
