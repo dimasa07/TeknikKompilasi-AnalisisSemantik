@@ -67,11 +67,11 @@ begin
 end;
 
 // Fungsi getByToken
-function getByToken(token : string):Tpointer;
+function getByToken(token : string; link:Tpointer):Tpointer;
 var
    temp, hasil : Tpointer;
 begin
-     temp := tokens;
+     temp := link;
      hasil := nil;
      while temp <> nil do
      begin
@@ -229,8 +229,8 @@ begin
      while temp <> nil do
      begin
           if temp^.tipe ='KONSTANTA' then
-             if getByToken(temp^.token) <> nil then
-                temp^.var_tipe := getByToken(temp^.token)^.var_tipe;
+             if getByToken(temp^.token, tokens) <> nil then
+                temp^.var_tipe := getByToken(temp^.token,tokens)^.var_tipe;
           temp := temp^.next;
      end;
 end;
@@ -486,9 +486,59 @@ end;
 
 // Fungsi Type Conversion Checking
 function type_conversion:string;
+const
+     math_simbols = ['/','*','-'];
+var
+   temp, temp1 : Tpointer;
+   hasil : string;
 begin
+     hasil := keterangan_false;
+     temp := tokens;
+     while temp <> nil do
+     begin
+          if (temp^.token=':')and(temp^.next^.token='=') then
+          begin
+               if upcase(temp^.prev^.var_tipe)='INTEGER' then
+               begin
+                    temp1 := temp;
+                    while temp1 <> nil do
+                    begin
+                         if temp1^.token=';' then break;
+                         if (temp1^.token='/') or
+                         (upcase(temp1^.var_tipe)='REAL') then
+                         begin
+                              hasil := keterangan_true;
+                              break;
+                         end;
+                         temp1 := temp1^.next;
+                    end;
+               end;
+               if upcase(temp^.prev^.var_tipe)='STRING' then
+               begin
+                    temp1 := temp;
+                    while temp1 <> nil do
+                    begin
+                         if temp1^.token=';' then break;
+                         if temp1^.token[1] in math_simbols then
+                         begin
+                              hasil := keterangan_true;
+                              break;
+                         end;
+                         if temp1^.token[1]='+' then
+                            if (upcase(temp1^.prev^.var_tipe)<>'STRING')or
+                            (upcase(temp1^.next^.var_tipe)<>'STRING') then
+                            begin
+                                 hasil := keterangan_true;
+                                 break;
+                            end;
+                         temp1 := temp1^.next;
+                    end;
+               end;
+          end;
+          temp := temp^.next;
+     end;
 
-     type_conversion := keterangan_false;
+     type_conversion := hasil;
 end;
 
 // Fungsi Type Coercion Checking
