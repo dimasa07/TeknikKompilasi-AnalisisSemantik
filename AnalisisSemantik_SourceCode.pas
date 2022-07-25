@@ -11,8 +11,7 @@ const
      jumlah_konstant = 7;
      jumlah_keyword = 26;
      konstants : array[1..jumlah_konstant] of string = (
-               'STRING','INTEGER','BOOLEAN','CHAR','BYTE','REAL','FILE'
-               );
+               'STRING','INTEGER','BOOLEAN','CHAR','BYTE','REAL','FILE');
      keywords : array[1..jumlah_keyword] of string = (
               'PROGRAM','VAR','BEGIN','END','IF','NOT','ELSE','THEN',
               'FOR','TO','DO','PROCEDURE','FUNCTION','ARRAY','TYPE',
@@ -75,7 +74,7 @@ begin
      hasil := nil;
      while temp <> nil do
      begin
-          if temp^.token = token then
+          if upcase(temp^.token) = upcase(token) then
           begin
                hasil :=temp;
                break;
@@ -86,7 +85,7 @@ begin
      getByToken := hasil;
 end;
 
-// Fungsi getextTipe
+// Fungsi geNextTipe
 function getNextTipe(link : Tpointer):Tpointer;
 var
    temp, hasil : Tpointer;
@@ -456,9 +455,65 @@ end;
 
 // Fungsi Name Related Checking
 function name_related_check:string;
+var
+   temp,temp1 : Tpointer;
+   hasil : string;
+   jumlah_begin,i : integer;
+   is_function : boolean;
+   nama_fungsi : string;
 begin
+     hasil := keterangan_false;
+     jumlah_begin := 0;
+     i := 0;
+     is_function := false;
+     nama_fungsi := '';
+     temp := tokens;
+     while temp <> nil do
+     begin
+          if upcase(temp^.tipe)='KEYWORD' then
+          begin
+               if upcase(temp^.token)='FUNCTION' then
+               begin
+                    is_function := true;
+                    nama_fungsi := temp^.next^.token;
+               end;
+               if is_function then
+               begin
+                    if upcase(temp^.token) = 'BEGIN' then
+                       jumlah_begin := jumlah_begin+1;
+                    if upcase(temp^.token) = 'END' then
+                    begin
+                         jumlah_begin := jumlah_begin-1;
+                         if jumlah_begin = 0 then
+                         begin
+                              is_function := false;
+                              nama_fungsi := '';
+                         end;
+                    end;
+              end;
+          end;
+          if (is_function)and(getByToken(nama_fungsi,temp)<>nil) then
+          begin
+               temp1 := getByToken(nama_fungsi,temp);
+               while temp1 <> nil do
+               begin
+                    i := i+1;
+                    temp1 := getByToken(nama_fungsi,temp1^.next);
+               end;
+               if i < 2 then
+               begin
+                    hasil := keterangan_true;
+                    break;
+               end;
+               i:=0;
+               is_function := false;
+               jumlah_begin := 0;
+          end;
 
-     name_related_check := keterangan_false;
+          temp := temp^.next;
+     end;
+
+     name_related_check := hasil;
 end;
 
 // Fungsi Type Checking
@@ -543,9 +598,36 @@ end;
 
 // Fungsi Type Coercion Checking
 function type_coercion:string;
+var
+   temp,temp1 : Tpointer;
+   hasil : string;
 begin
-
-     type_coercion := keterangan_false;
+     hasil := keterangan_false;
+     temp := tokens;
+     while temp <> nil do
+     begin
+          if (temp^.token=':')and(temp^.next^.token='=') then
+          begin
+               if upcase(temp^.prev^.var_tipe)='INTEGER' then
+               begin
+                    temp1 := temp;
+                    while temp1 <> nil do
+                    begin
+                         if temp1^.token=';' then break;
+                         if upcase(temp1^.token)='INTEGER' then
+                            if (upcase(temp1^.next^.var_tipe)='STRING')or
+                            (upcase(temp1^.next^.var_tipe)='REAL') then
+                            begin
+                                 hasil := keterangan_true;
+                                 break;
+                            end;
+                         temp1 := temp1^.next;
+                    end;
+               end;
+          end;
+          temp := temp^.next;
+     end;
+     type_coercion := hasil;
 end;
 
 // Prosedur Baca File
@@ -636,7 +718,6 @@ begin
      write('Tekan ENTER untuk kembali ke menu ');
      readln;
 end;
-
 
 begin
      // Mengganti tema
